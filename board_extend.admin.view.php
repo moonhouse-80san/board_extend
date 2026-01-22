@@ -121,6 +121,7 @@
 				// 제외할 확장자
 				$image_exts = array('jpg','jpeg','png','gif','bmp','webp','svg');
 				$audio_exts = array('mp3','wav','ogg','aac','flac','m4a','wma');
+				$video_exts = array('mp4','avi','mov','wmv','mkv','webm','flv','mpeg','mpg');
 
 				foreach($output->data as $key => $document) {
 					$file_args = new stdClass();
@@ -135,11 +136,12 @@
 						foreach($file_output->data as $file) {
 							$ext = strtolower(pathinfo($file->source_filename, PATHINFO_EXTENSION));
 
-							// image / audio 타입 제외 + 확장자 재확인
+							// image / audio / video 타입 제외 + 확장자 재확인
 							if(
 								!in_array($file->file_type, array('image','audio')) &&
 								!in_array($ext, $image_exts) &&
-								!in_array($ext, $audio_exts)
+								!in_array($ext, $audio_exts) &&
+								!in_array($ext, $video_exts)
 							) {
 								$filtered_files[] = $file;
 							}
