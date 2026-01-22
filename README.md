@@ -13,6 +13,7 @@ XE에서 부터 사용해 오던 게시판 기능 확장 모듈을 약간 수정
 다운로드 파일에는 이미지파일, 오디오파일, 동영상파일은 제외 했습니다.
 
 image = 'jpg','jpeg','png','gif','bmp','webp','svg'
+
 audio = 'mp3','wav','ogg','aac','flac','m4a','wma'
 
 video = 'mp4','avi','mov','wmv','mkv','webm','flv','mpeg','mpg'
