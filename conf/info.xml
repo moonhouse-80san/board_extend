@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module version="0.2">
+    <title xml:lang="ko">게시판 확장모듈</title>
+    <description xml:lang="ko">게시판 순서변경, 일자변경 등 기본적으로 지원하지않는 db직접수정기능을 가집니다.</description>
+    <version>1.2</version>
+    <date>2026-01-22</date>
+    <category>service</category>
+
+    <author email_address="xiso@xiso.co.kr" link="http://www.xiso.co.kr/">
+        <name xml:lang="ko">xiso</name>
+    </author>
+    <author email_address="80san@moonhouse.co.kr" link="https://moonhouse.co.kr/">
+        <name xml:lang="ko">80san</name>
+    </author>
+</module>

@@ -1,0 +1,125 @@
+<!--%import("./css/buttonset.css")-->
+<!--%import("./js/modify_document.js")-->
+<!--#include("header.html")-->
+<h4>순서변경 기능은, 문서출력 순서설정이 "문서번호" "내림차순"인경우에만 동작하고, 다른페이지의 문서와 위치가 변경될 수 없습니다..</h4>
+<p>DB에 접근하지않고서 수정이 불가능한 부분을 반영할 수 있도록 도와줍니다.</p>
+<table border="0" cellspacing="0" summary="" class="rowTable">
+	<caption>한번에 볼 문서갯수 : <input type="text" name="list_count" value="{$list_count}" style="margin-top:5px;"/>
+	<input type="button" style="height:26px; line-height:26px; padding:0 10px; font-size:11px; box-sizing:border-box; vertical-align:middle; margin-top:-5px;" value="적용" onclick="document.location.href = current_url.setQuery('list_count',jQuery(this).prev().val());" /></caption>
+	<thead>
+	<tr>
+		<th>번호</th>
+		<th>제목</th>
+		<th>조회수</th>
+		<th>추천수</th>
+		<th>작성일 (yyyymmddhhiiss)</th>
+		<th>수정일 (yyyymmddhhiiss)</th>
+		<th>순서번호</th>
+		<th>반영</th>
+		<th>다운로드 수</th>
+	</tr>
+	</thead>
+	<tbody>
+	<!--// 게시물이 없으면 등록된 글이 없음을 표시 -->
+	<!--@if(!$document_list)-->
+	<tr class="bg0 tCenter">
+		<td colspan="9" class="title">
+			게시글이 없습니다.
+		</td>
+	</tr>
+	<!--@else-->
+		{@ $first=true}
+		<!--// 일반 글 출력 -->
+		<tr loop="$document_list => $no,$document" class="bg{($no+1)%2+1}" style="border:1px solid #e0e0e0;"<!--@if($document_srl == $document->document_srl)-->"background-color:#ddd;"<!--@endif-->>
+			<td class="num" style="padding-left:10px;"><!--@if($document_srl == $document->document_srl)--><img src="images/iconArrowD8.gif" border="0" alt="" /><!--@else-->{$no}<!--@end--></td>
+			<td class="title">
+				<!--@if($grant->manager)-->
+					<!--@if($no!=1)-->
+					<a href="#" onclick="moveDocument('{$document->document_srl}','down','{$no}'); return false;" class="buttonSet buttonDown"><span>아래로</span></a>
+					<!--@end-->
+					<!--@if($first==false)-->
+						<a href="#" onclick="moveDocument('{$document->document_srl}','up','{$no}'); return false;" class="buttonSet buttonUp"><span>위로</span></a>
+					<!--@else-->
+						{@ $first=false}
+					<!--@end-->
+				<!--@end-->
+				<a href="{getUrl('document_srl',$document->document_srl, 'listStyle', $listStyle, 'cpage','')}">{$document->getTitle($module_info->subject_cut_size)}</a>{$document->printExtraImages(60*60*$module_info->duration_new)}
+			</td>
+			<td class="reading"><input type="text" style="width:50px;" class="readed_count_{$document->document_srl}" value="{$document->get('readed_count')}" /></td>
+			<td class="recommend"><input type="text" style="width:50px;" class="voted_count_{$document->document_srl}" value="{$document->get('voted_count')}" /></td>
+			<td class="date"><input type="text" style="width:120px;" class="regdate_{$document->document_srl}" value="{$document->get('regdate')}" /></td>
+			<td class="date"><input type="text" style="width:120px;" class="last_update_{$document->document_srl}" value="{$document->get('last_update')}" /></td>
+			<td><input type="text" style="width:80px;" class="list_order_{$document->document_srl}" list_order="{$document->get('list_order')}" id="{$no}_order" value="{$document->get('list_order')}" /></td>
+			<td style="padding-left:10px"><span class="btn" style="margin-top:-8px;"><input type="button" style="height:26px; line-height:26px; padding:0 10px; font-size:11px; box-sizing:border-box; vertical-align:middle;" onclick="applyModify('{$document->document_srl}')" value="수정반영" /></span></td>
+
+			<!-- 다운로드 수 컬럼 -->
+			<td style="padding:10px 10px 0 10px;">
+				<!--@if($document->uploaded_files && count($document->uploaded_files) > 0)-->
+					<!--@foreach($document->uploaded_files as $idx => $file)-->
+						<div style="margin-bottom:8px; padding:5px; background:#f9f9f9; border-radius:3px; border:1px solid #e0e0e0;">
+							<div style="margin-bottom:3px; font-size:12px;">
+								📎 <strong>{$file->source_filename}</strong>
+							</div>
+							<div style="padding-left:15px; font-size:11px; display:inline-flex; align-items:center; gap:6px;">
+								현재: <span style="color:#666;">{$file->download_count}회</span>
+								→
+								<input type="number" id="download_{$file->file_srl}" value="{$file->download_count}" min="0" style="width:60px; height:26px; line-height:26px; margin-top:10px; padding:10px 6px; font-size:11px; border:1px solid #ddd; border-radius:3px; box-sizing:border-box; vertical-align:middle;" />
+								<button type="button" onclick="updateDownloadCount('{$file->file_srl}')" style="height:26px; line-height:26px; padding:0 10px; font-size:11px; cursor:pointer; background:#5c7cfa; color:white; border:none; border-radius:3px; box-sizing:border-box; vertical-align:middle;">변경</button>
+							</div>
+						</div>
+					<!--@end-->
+				<!--@else-->
+					<span style="color:#999; font-size:11px;">이미지 or 동영상파일外 없음</span>
+				<!--@end-->
+			</td>
+		</tr>
+	<!--@end-->
+	</tbody>
+</table>
+	
+<div class="pagination a1">
+	<a href="{getUrl('page','','document_srl','','division',$division,'last_division',$last_division,'entry','')}" class="prevEnd">{$lang->first_page}</a> 
+	<!--@while($page_no = $page_navigation->getNextPage())-->
+		<!--@if($page == $page_no)-->
+			<strong>{$page_no}</strong> 
+		<!--@else-->
+			<a href="{getUrl('page',$page_no,'document_srl','','division',$division,'last_division',$last_division,'entry','')}">{$page_no}</a>
+		<!--@end-->
+	<!--@end-->
+	<a href="{getUrl('page',$page_navigation->last_page,'document_srl','','division',$division,'last_division',$last_division,'entry','')}" class="nextEnd">{$lang->last_page}</a>
+</div>
+
+<script>
+	function updateDownloadCount(file_srl) {
+		var input = document.getElementById('download_' + file_srl);
+		var download_count = input.value;
+		
+		if(!download_count || download_count < 0) {
+			alert('올바른 숫자를 입력해주세요.');
+			return false;
+		}
+		
+		if(!confirm('다운로드 수를 ' + download_count + '회로 변경하시겠습니까?')) {
+			return false;
+		}
+		
+		var params = {
+			file_srl: file_srl,
+			download_count: download_count
+		};
+		
+		exec_xml(
+			'board_extend',
+			'procBoard_extendAdminFileDownload',
+			params,
+			function(ret_obj) {
+				alert(ret_obj.message);
+				if(ret_obj.error == '0' || ret_obj.error == 0) {
+					location.reload();
+				}
+			}
+		);
+		
+		return false;
+	}
+</script>

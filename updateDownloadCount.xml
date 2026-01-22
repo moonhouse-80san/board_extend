@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<query id="updateDownloadCount" action="update">
+    <tables>
+        <table name="files" />
+    </tables>
+    <columns>
+        <column name="download_count" var="download_count" notnull="notnull" />
+    </columns>
+    <conditions>
+        <condition operation="equal">file_srl</condition>
+    </conditions>
+</query>
