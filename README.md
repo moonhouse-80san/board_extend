@@ -9,6 +9,14 @@ XE에서 부터 사용해 오던 게시판 기능 확장 모듈을 약간 수정
 이이전 버전의 다운로드 수를 이전 버전에 더하는데
 
 이전에는 DB에 접속해서 일일이 수정하였는데 이렇게 게시판 설정에서 할 수 있게 만드니 편하네요.
+
+다운로드 파일에는 이미지파일, 오디오파일, 동영상파일은 제외 했습니다.
+
+image = 'jpg','jpeg','png','gif','bmp','webp','svg'
+
+audio = 'mp3','wav','ogg','aac','flac','m4a','wma'
+
+video = 'mp4','avi','mov','wmv','mkv','webm','flv','mpeg','mpg'
 <img width="1024" height="652" alt="image" src="https://github.com/user-attachments/assets/83692336-99e1-4a9a-8fe3-5650d96974a3" />
 오리지널 버전 게시판 기능 확장 모듈의 라이선스가 GPL v2 이고
 
