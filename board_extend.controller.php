@@ -1,12 +1,12 @@
 <?php
-    /**
-     * @class  board_extendAdminController
-     * @author xiso (xiso@xiso.co.kr)
-     * @brief  board_extend module admin controller class
-     **/
+	/**
+	 * @class  board_extendAdminController
+	 * @author xiso (xiso@xiso.co.kr)
+	 * @brief  board_extend module admin controller class
+	 **/
 	require_once(_XE_PATH_.'modules/board/board.controller.php');
-    class board_extendController extends boardController {
-		
+	class board_extendController extends boardController {
+
 		function triggerDisplay(){
 			//trigger display before();
 			if(strpos(Context::get('act'),"ispBoardAdmin") || strpos(Context::get('act'),"ispBoard_extendAdmin")){
@@ -32,7 +32,7 @@
 				Context::addHtmlHeader("<script type='text/javascript'>$script</script>");
 			}
 		}
-		
+
 	}
-	
+
 ?>

@@ -1,8 +1,163 @@
 <!--%import("./css/buttonset.css")-->
 <!--%import("./js/modify_document.js")-->
 <!--#include("header.html")-->
-<h4>순서변경 기능은, 문서출력 순서설정이 "문서번호" "내림차순"인경우에만 동작하고, 다른페이지의 문서와 위치가 변경될 수 없습니다..</h4>
+
+<h4>순서변경 기능은, 문서출력 순서설정이 "문서번호" "내림차순"인경우에만 동작하고, 다른페이지의 문서와 위치가 변경될 수 없습니다.</h4>
 <p>DB에 접근하지않고서 수정이 불가능한 부분을 반영할 수 있도록 도와줍니다.</p>
+
+<!--// 허용 확장자 체크박스 UI -->
+<details style="display:inline-block; background-color:#444; padding:4px 6px; border:1px solid #e0e0e0; border-radius:4px; min-width:730px;">
+	<summary style="color:#fff;">다운로드 수 변경란에 허용할 첨부파일 확장자를 선택시 <span style="color:gold; font-weight:bold;">Click !!</span> <span style="font-size:10px; color:#eee; float:right;">( 기본설정은 미디어 파일 제외 모든 파일 허용 )</span></summary>
+	<div style="display:inline-block; margin:5px 0 2px; padding:10px; background:#f8f9fa; border:1px dotted #ddd; border-radius:4px;">
+
+		<!-- 전체 선택 체크박스 추가 -->
+		<div style="margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid #ddd;">
+			<label style="cursor:pointer; font-weight:bold;">
+				<input type="checkbox" id="selectAllAllowed" onclick="toggleAllExtensions(this, 'allowed')" />
+				전체 선택/해제 (최우선 적용)
+			</label>
+		</div>
+
+		<div id="extensionList" style="display:flex; flex-wrap:wrap; gap:12px; font-size:12px;">
+			{@ $default_exts = array('zip','exe','txt','html','pdf','hwp','hwpx','doc','docx','xls','xlsx','ppt','pptx') }
+			{@ $saved_exts = array() }
+			{@ $saved_ext_string = isset($allowed_extensions) ? $allowed_extensions : '' }
+			<!--@if(!empty($saved_ext_string))-->
+				{@ $saved_exts = array_map('trim', explode(',', $saved_ext_string)) }
+			<!--@end-->
+			<!--@foreach($default_exts as $ext)-->
+				<label style="cursor:pointer;">
+					<input type="checkbox"
+						   class="ext-checkbox"
+						   name="allowed_extensions[]"
+						   value="{$ext}"
+						   onclick="updateSelectAllState('allowed')"
+						   <!--@if(in_array($ext, $saved_exts))-->checked<!--@end--> />
+					.{$ext}
+				</label>
+			<!--@end-->
+		</div>
+
+		<!-- 확장자 직접 추가 UI -->
+		<div style="margin-top:12px; padding-top:12px; border-top:1px solid #ddd;">
+			<div style="display:flex; align-items:center; gap:8px;">
+				<label style="font-size:12px; font-weight:bold;">확장자 추가:</label>
+				<input type="text" id="customExtension" placeholder="게시판 특징에 따라서 예: psd, rar등" style="flex:1; height:30px; padding:0 10px; font-size:12px; border:1px solid #ddd; border-radius:3px; box-sizing:border-box;" onkeypress="if(event.keyCode==13){addCustomExtension('allowed'); return false;}" />
+				<button type="button" onclick="addCustomExtension('allowed'); return false;" style="height:30px; padding:0 15px; background:#5c7cfa; color:#fff; border:none; border-radius:3px; cursor:pointer; font-size:12px; white-space:nowrap; margin-top:-10px;">추가</button>
+			</div>
+			<p style="margin-top:4px; font-size:10px; color:#999;">
+				※ 여러 개 추가 시 쉼표(,)로 구분해주세요. 예: psd, dwg, css, rar 
+			</p>
+		</div>
+
+		<p style="margin-top:6px; font-size:11px; color:#777;">
+			체크된 확장자만 최우선 다운로드 목록에 표시됩니다. (체크 안하면 <u>미디어 확장자가 포함되지 않은</u> 모든 확장자가 표시됩니다.)
+		</p>
+		<div style="margin-top:10px; float:right;">
+			<input type="button" value="확장자 설정 저장" onclick="saveExtensionSettings('allowed')" style="height:30px; padding:0 15px; background:#333; color:#fff; border:none; border-radius:3px; cursor:pointer;" />
+		</div>
+
+		<!--// 미디어 파일 제외 체크박스 -->
+		<div style="display:inline-block; margin-bottom:5px; padding:8px 12px; border:1px solid #e0e0e0; border-radius:4px; background:#fff; float:left;">
+			<label style="cursor:pointer; font-size:13px; display:flex; align-items:center; gap:6px;">
+				<input type="checkbox" 
+					   id="excludeMedia" 
+					   name="exclude_media" 
+					   value="Y"
+					   onchange="toggleMediaFilter(this)"
+					   <!--@if($exclude_media == 'Y' || !$exclude_media)-->checked<!--@end--> />
+				<span style="font-weight:bold;">미디어 파일 제외 (사진, 동영상, 음악 등)</span>
+			</label>
+			<p id="excludeMediaDesc" style="margin:4px 0 0 24px; font-size:12px; color:#999; display:<!--@if($exclude_media == 'Y' || !$exclude_media)-->block<!--@else-->none<!--@end-->;">
+				체크 해제 시 미디어 확장자를 개별 선택할 수 있습니다.<br/>
+				허용할 확장자 개별 체크시 체크한 확장자만 출력됩니다.
+			</p>
+		</div>
+
+		<!-- 미디어 파일 개별 선택 섹션 (토글) -->
+		<div id="mediaExtensionSection" style="clear:both; margin-top:15px; padding:15px; background:#fff5f5; border:1px solid #ffcccc; border-radius:4px; display:<!--@if($exclude_media != 'Y' && $exclude_media !== null && $exclude_media !== '')-->block<!--@else-->none<!--@end-->;">
+			<!-- 전체 선택 체크박스 -->
+			<div style="margin-bottom:10px;">
+				<label style="cursor:pointer; font-weight:bold;">
+					<input type="checkbox" id="selectAllMedia" onclick="toggleAllExtensions(this, 'media')" />
+					미디어 전체 선택/해제
+				</label>
+			</div>
+
+			<!-- 이미지 파일 -->
+			<div style="margin-bottom:12px;">
+				<strong style="color:#6c5ce7; font-size:13px;">📷 이미지 파일</strong>
+				<div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:6px; font-size:12px; padding-left:20px;">
+					{@ $image_exts = array('jpg','jpeg','png','gif','bmp','webp','svg','ico','tiff','tif') }
+					{@ $excluded_media = array() }
+					{@ $excluded_media_string = Context::get('excluded_media_extensions') ?: '' }
+					<!--@if(!empty($excluded_media_string))-->
+						{@ $excluded_media = array_map('trim', explode(',', $excluded_media_string)) }
+					<!--@end-->
+					<!--@foreach($image_exts as $ext)-->
+						<label style="cursor:pointer;">
+							<input type="checkbox"
+								   class="media-checkbox"
+								   name="excluded_media_extensions[]"
+								   value="{$ext}"
+								   onclick="updateSelectAllState('media')"
+								   <!--@if(!in_array($ext, $excluded_media))-->checked<!--@end--> />
+							.{$ext}
+						</label>
+					<!--@end-->
+				</div>
+			</div>
+
+			<!-- 동영상 파일 -->
+			<div style="margin-bottom:12px;">
+				<strong style="color:#0984e3; font-size:13px;">🎬 동영상 파일</strong>
+				<div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:6px; font-size:12px; padding-left:20px;">
+					{@ $video_exts = array('mp4','avi','mov','wmv','flv','mkv','webm','mpeg','mpg','m4v','3gp') }
+					<!--@foreach($video_exts as $ext)-->
+						<label style="cursor:pointer;">
+							<input type="checkbox"
+								   class="media-checkbox"
+								   name="excluded_media_extensions[]"
+								   value="{$ext}"
+								   onclick="updateSelectAllState('media')"
+								   <!--@if(!in_array($ext, $excluded_media))-->checked<!--@end--> />
+							.{$ext}
+						</label>
+					<!--@end-->
+				</div>
+			</div>
+
+			<!-- 음악 파일 -->
+			<div style="margin-bottom:12px;">
+				<strong style="color:#00b894; font-size:13px;">🎵 음악 파일</strong>
+				<div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:6px; font-size:12px; padding-left:20px;">
+					{@ $audio_exts = array('mp3','wav','ogg','flac','aac','m4a','wma','ape','alac') }
+					<!--@foreach($audio_exts as $ext)-->
+						<label style="cursor:pointer;">
+							<input type="checkbox"
+								   class="media-checkbox"
+								   name="excluded_media_extensions[]"
+								   value="{$ext}"
+								   onclick="updateSelectAllState('media')"
+								   <!--@if(!in_array($ext, $excluded_media))-->checked<!--@end--> />
+							.{$ext}
+						</label>
+					<!--@end-->
+				</div>
+			</div>
+
+			<p style="margin-top:10px; font-size:11px; color:#999; background:#fff; padding:8px; border-left:3px solid #d63031;">
+				✅ 체크된 미디어 파일만 다운로드 목록에 표시됩니다.<br/>
+				❌ <u>체크 해제한 미디어 파일은 출력에서 제외</u>됩니다.
+			</p>
+
+			<div style="margin-top:10px; text-align:right;">
+				<input type="button" value="미디어 파일 설정 저장" onclick="saveMediaSettings()" style="height:30px; padding:0 15px; background:#d63031; color:#fff; border:none; border-radius:3px; cursor:pointer;" />
+			</div>
+		</div>
+	</div>
+</details>
+
 <table border="0" cellspacing="0" summary="" class="rowTable">
 	<caption>한번에 볼 문서갯수 : <input type="text" name="list_count" value="{$list_count}" style="margin-top:5px;"/>
 	<input type="button" style="height:26px; line-height:26px; padding:0 10px; font-size:11px; box-sizing:border-box; vertical-align:middle; margin-top:-5px;" value="적용" onclick="document.location.href = current_url.setQuery('list_count',jQuery(this).prev().val());" /></caption>
@@ -30,7 +185,8 @@
 	<!--@else-->
 		{@ $first=true}
 		<!--// 일반 글 출력 -->
-		<tr loop="$document_list => $no,$document" class="bg{($no+1)%2+1}" style="border:1px solid #e0e0e0;"<!--@if($document_srl == $document->document_srl)-->"background-color:#ddd;"<!--@endif-->>
+		<!--@foreach($document_list as $no => $document)-->
+		<tr class="bg{($no+1)%2+1}" style="border:1px solid #e0e0e0;<!--@if($document_srl == $document->document_srl)-->background-color:#ddd;<!--@end-->">
 			<td class="num" style="padding-left:10px;"><!--@if($document_srl == $document->document_srl)--><img src="images/iconArrowD8.gif" border="0" alt="" /><!--@else-->{$no}<!--@end--></td>
 			<td class="title">
 				<!--@if($grant->manager)-->
@@ -69,14 +225,15 @@
 						</div>
 					<!--@end-->
 				<!--@else-->
-					<span style="color:#999; font-size:11px;">이미지 or 동영상파일外 없음</span>
+					<span style="color:#999; font-size:11px;">변경할 파일 없음</span>
 				<!--@end-->
 			</td>
 		</tr>
+		<!--@end-->
 	<!--@end-->
 	</tbody>
 </table>
-	
+
 <div class="pagination a1">
 	<a href="{getUrl('page','','document_srl','','division',$division,'last_division',$last_division,'entry','')}" class="prevEnd">{$lang->first_page}</a> 
 	<!--@while($page_no = $page_navigation->getNextPage())-->
@@ -90,36 +247,99 @@
 </div>
 
 <script>
-	function updateDownloadCount(file_srl) {
-		var input = document.getElementById('download_' + file_srl);
-		var download_count = input.value;
-		
-		if(!download_count || download_count < 0) {
-			alert('올바른 숫자를 입력해주세요.');
+	// 일반 확장자 설정 저장
+	function saveExtensionSettings() {
+		var checkboxes = document.querySelectorAll('.ext-checkbox:checked');
+		var extensions = [];
+
+		for(var i = 0; i < checkboxes.length; i++) {
+			extensions.push(checkboxes[i].value);
+		}
+
+		if(!confirm('확장자 설정을 저장하시겠습니까?')) {
 			return false;
 		}
+
+		var form = jQuery('<form></form>');
+		form.append(jQuery('<input type="hidden" name="module" value="board_extend" />'));
+		form.append(jQuery('<input type="hidden" name="act" value="procBoard_extendAdminSaveExtensions" />'));
+		form.append(jQuery('<input type="hidden" name="module_srl" value="{$module_info->module_srl}" />'));
 		
-		if(!confirm('다운로드 수를 ' + download_count + '회로 변경하시겠습니까?')) {
-			return false;
+		for(var i = 0; i < extensions.length; i++) {
+			form.append(jQuery('<input type="hidden" name="allowed_extensions[]" value="' + extensions[i] + '" />'));
 		}
-		
-		var params = {
-			file_srl: file_srl,
-			download_count: download_count
-		};
-		
-		exec_xml(
-			'board_extend',
-			'procBoard_extendAdminFileDownload',
-			params,
-			function(ret_obj) {
-				alert(ret_obj.message);
-				if(ret_obj.error == '0' || ret_obj.error == 0) {
+
+		jQuery.ajax({
+			type: 'POST',
+			url: request_uri,
+			data: form.serialize(),
+			dataType: 'json',
+			success: function(data) {
+				alert(data.message);
+				if(data.error == '0' || data.error == 0) {
 					location.reload();
 				}
+			},
+			error: function() {
+				alert('저장 중 오류가 발생했습니다.');
 			}
-		);
+		});
+
+		return false;
+	}
+
+	// 미디어 파일 설정 저장
+	function saveMediaSettings() {
+		var excludeMediaChecked = document.getElementById('excludeMedia').checked;
 		
+		// 미디어 제외 체크되어 있으면 저장 불필요
+		if(excludeMediaChecked) {
+			alert('먼저 "미디어 파일 제외" 체크를 해제해주세요.');
+			return false;
+		}
+
+		var checkboxes = document.querySelectorAll('.media-checkbox');
+		var excludedExtensions = [];
+
+		// 체크 해제된 항목만 제외 목록에 추가
+		for(var i = 0; i < checkboxes.length; i++) {
+			if(!checkboxes[i].checked) {
+				excludedExtensions.push(checkboxes[i].value);
+			}
+		}
+
+		if(!confirm('미디어 파일 설정을 저장하시겠습니까?')) {
+			return false;
+		}
+
+		var form = jQuery('<form></form>');
+		form.append(jQuery('<input type="hidden" name="module" value="board_extend" />'));
+		form.append(jQuery('<input type="hidden" name="act" value="procBoard_extendAdminSaveMediaExtensions" />'));
+		form.append(jQuery('<input type="hidden" name="module_srl" value="{$module_info->module_srl}" />'));
+		
+		for(var i = 0; i < excludedExtensions.length; i++) {
+			form.append(jQuery('<input type="hidden" name="excluded_media_extensions[]" value="' + excludedExtensions[i] + '" />'));
+		}
+
+		jQuery.ajax({
+			type: 'POST',
+			url: request_uri,
+			data: form.serialize(),
+			dataType: 'json',
+			success: function(data) {
+				alert(data.message);
+				if(data.error == '0' || data.error == 0) {
+					// exclude_media=N 상태를 유지하면서 새로고침
+					var currentUrl = new URL(window.location.href);
+					currentUrl.searchParams.set('exclude_media', 'N');
+					window.location.href = currentUrl.toString();
+				}
+			},
+			error: function() {
+				alert('저장 중 오류가 발생했습니다.');
+			}
+		});
+
 		return false;
 	}
 </script>

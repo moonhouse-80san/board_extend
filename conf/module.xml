@@ -1,23 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <module version="0.2">
-    <title xml:lang="ko">게시판 확장</title>
-    <description xml:lang="ko">게시판 모듈 확장 기능</description>
-    <version>1.2</version>
-    <date>2026-01-22</date>
-    <category>service</category>
-
-    <author email_address="xiso@xiso.co.kr" link="http://xiso.co.kr">
-        <name xml:lang="ko">xiso</name>
-    </author>
-    <author email_address="80san@moonhouse.co.kr" link="https://moonhouse.co.kr/">
-        <name xml:lang="ko">80san</name>
-    </author>
-
+    <grants />
+    <permissions />
     <actions>
-        <action name="dispBoard_extendAdminBoardList" type="view" standalone="true" admin_index="true" />
-        <action name="dispBoard_extendAdminBoardModify" type="view" standalone="true" />
-        <action name="procBoard_extendAdminWithOrder" type="controller" standalone="true" />
-        <action name="procBoard_extendAdminBoardModify" type="controller" standalone="true" />
-        <action name="procBoard_extendAdminFileDownload" type="controller" standalone="true" />
+        <action name="dispBoard_extendAdminBoardList" type="view" admin_index="true" />
+        <action name="dispBoard_extendAdminBoardModify" type="view" />
+        <action name="procBoard_extendAdminWithOrder" type="controller" />
+        <action name="procBoard_extendAdminBoardModify" type="controller" />
+        <action name="procBoard_extendAdminFileDownload" type="controller" />
+        <action name="procBoard_extendAdminSaveExtensions" type="controller" />
+        <action name="procBoard_extendAdminSaveMediaExtensions" type="controller" />
     </actions>
 </module>
